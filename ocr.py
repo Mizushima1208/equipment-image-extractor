@@ -1,7 +1,17 @@
-"""OCR engines - Local (Tesseract, EasyOCR) and Cloud (Google Vision)."""
+"""OCR engines - Multiple local and cloud options.
+
+Supported engines:
+- Tesseract: Traditional OCR, requires system installation
+- EasyOCR: Deep learning based, easy to use
+- PaddleOCR: High accuracy, multilingual (109 languages)
+- Surya: Modern OCR with layout analysis (90+ languages)
+- docTR: Document-focused OCR (TensorFlow/PyTorch)
+- Google Cloud Vision: Cloud-based, high accuracy
+"""
 import os
+import io
 import json
-from typing import Optional, List
+from typing import Optional, List, Union
 from PIL import Image
 import numpy as np
 
@@ -168,7 +178,6 @@ def ocr_with_easyocr_detailed(image_path_or_bytes, langs: List[str] = None, gpu:
         reader = easyocr.Reader(langs, gpu=gpu)
 
         if isinstance(image_path_or_bytes, bytes):
-            import io
             img = Image.open(io.BytesIO(image_path_or_bytes))
             img_array = np.array(img)
             results = reader.readtext(img_array)
@@ -179,3 +188,314 @@ def ocr_with_easyocr_detailed(image_path_or_bytes, langs: List[str] = None, gpu:
     except Exception as e:
         print(f"EasyOCR error: {e}")
         return []
+
+
+# =============================================================================
+# PaddleOCR - High accuracy, multilingual (109 languages)
+# =============================================================================
+
+def ocr_with_paddleocr(image_path_or_bytes, lang: str = 'japan', gpu: bool = False) -> Optional[str]:
+    """Perform OCR using PaddleOCR.
+
+    PaddleOCR by Baidu supports 109 languages with high accuracy.
+    Lightweight (<10MB) and fast.
+
+    Args:
+        image_path_or_bytes: Image file path or bytes
+        lang: Language code (default: 'japan')
+            Common: 'en', 'japan', 'korean', 'chinese_cht', 'french', 'german'
+        gpu: Whether to use GPU (default: False)
+
+    Returns:
+        Extracted text from image
+    """
+    try:
+        from paddleocr import PaddleOCR
+    except ImportError:
+        print("paddleocr not installed. Install with: pip install paddleocr")
+        return None
+
+    try:
+        ocr = PaddleOCR(use_angle_cls=True, lang=lang, use_gpu=gpu, show_log=False)
+
+        if isinstance(image_path_or_bytes, bytes):
+            img = Image.open(io.BytesIO(image_path_or_bytes))
+            img_array = np.array(img)
+            result = ocr.ocr(img_array, cls=True)
+        else:
+            result = ocr.ocr(str(image_path_or_bytes), cls=True)
+
+        # Extract text from results
+        texts = []
+        if result and result[0]:
+            for line in result[0]:
+                if line and len(line) >= 2:
+                    texts.append(line[1][0])  # line[1] = (text, confidence)
+
+        return "\n".join(texts)
+    except Exception as e:
+        print(f"PaddleOCR error: {e}")
+        return None
+
+
+def ocr_with_paddleocr_detailed(image_path_or_bytes, lang: str = 'japan', gpu: bool = False) -> List[dict]:
+    """Perform OCR using PaddleOCR with detailed results.
+
+    Args:
+        image_path_or_bytes: Image file path or bytes
+        lang: Language code (default: 'japan')
+        gpu: Whether to use GPU (default: False)
+
+    Returns:
+        List of dicts: {'bbox': [...], 'text': str, 'confidence': float}
+    """
+    try:
+        from paddleocr import PaddleOCR
+    except ImportError:
+        print("paddleocr not installed. Install with: pip install paddleocr")
+        return []
+
+    try:
+        ocr = PaddleOCR(use_angle_cls=True, lang=lang, use_gpu=gpu, show_log=False)
+
+        if isinstance(image_path_or_bytes, bytes):
+            img = Image.open(io.BytesIO(image_path_or_bytes))
+            img_array = np.array(img)
+            result = ocr.ocr(img_array, cls=True)
+        else:
+            result = ocr.ocr(str(image_path_or_bytes), cls=True)
+
+        # Format results
+        detailed = []
+        if result and result[0]:
+            for line in result[0]:
+                if line and len(line) >= 2:
+                    detailed.append({
+                        'bbox': line[0],
+                        'text': line[1][0],
+                        'confidence': line[1][1]
+                    })
+
+        return detailed
+    except Exception as e:
+        print(f"PaddleOCR error: {e}")
+        return []
+
+
+# =============================================================================
+# Surya OCR - Modern OCR with layout analysis (90+ languages)
+# =============================================================================
+
+def ocr_with_surya(image_path_or_bytes, langs: List[str] = None) -> Optional[str]:
+    """Perform OCR using Surya.
+
+    Surya supports 90+ languages with excellent layout analysis.
+    Good for documents with tables, images, and complex layouts.
+
+    Args:
+        image_path_or_bytes: Image file path or bytes
+        langs: Language codes (default: ['ja', 'en'])
+            Uses ISO 639-1 codes: 'ja', 'en', 'zh', 'ko', 'fr', 'de', etc.
+
+    Returns:
+        Extracted text from image
+    """
+    try:
+        from surya.ocr import run_ocr
+        from surya.model.detection.model import load_model as load_det_model, load_processor as load_det_processor
+        from surya.model.recognition.model import load_model as load_rec_model
+        from surya.model.recognition.processor import load_processor as load_rec_processor
+    except ImportError:
+        print("surya-ocr not installed. Install with: pip install surya-ocr")
+        return None
+
+    if langs is None:
+        langs = ['ja', 'en']
+
+    try:
+        # Load models
+        det_processor, det_model = load_det_processor(), load_det_model()
+        rec_model, rec_processor = load_rec_model(), load_rec_processor()
+
+        # Load image
+        if isinstance(image_path_or_bytes, bytes):
+            img = Image.open(io.BytesIO(image_path_or_bytes))
+        else:
+            img = Image.open(image_path_or_bytes)
+
+        # Convert to RGB if needed
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+
+        # Run OCR
+        predictions = run_ocr(
+            [img],
+            [langs],
+            det_model,
+            det_processor,
+            rec_model,
+            rec_processor
+        )
+
+        # Extract text
+        texts = []
+        if predictions and predictions[0]:
+            for line in predictions[0].text_lines:
+                texts.append(line.text)
+
+        return "\n".join(texts)
+    except Exception as e:
+        print(f"Surya OCR error: {e}")
+        return None
+
+
+# =============================================================================
+# docTR - Document Text Recognition (Mindee)
+# =============================================================================
+
+def ocr_with_doctr(image_path_or_bytes, detect_lang: bool = False) -> Optional[str]:
+    """Perform OCR using docTR.
+
+    docTR by Mindee is optimized for document understanding.
+    Uses deep learning for both detection and recognition.
+
+    Args:
+        image_path_or_bytes: Image file path or bytes
+        detect_lang: Whether to detect language automatically (default: False)
+
+    Returns:
+        Extracted text from image
+    """
+    try:
+        from doctr.io import DocumentFile
+        from doctr.models import ocr_predictor
+    except ImportError:
+        print("python-doctr not installed. Install with: pip install python-doctr")
+        return None
+
+    try:
+        # Load model
+        model = ocr_predictor(pretrained=True)
+
+        # Load image
+        if isinstance(image_path_or_bytes, bytes):
+            doc = DocumentFile.from_images(image_path_or_bytes)
+        else:
+            doc = DocumentFile.from_images(str(image_path_or_bytes))
+
+        # Run OCR
+        result = model(doc)
+
+        # Extract text
+        texts = []
+        for page in result.pages:
+            for block in page.blocks:
+                for line in block.lines:
+                    line_text = " ".join([word.value for word in line.words])
+                    texts.append(line_text)
+
+        return "\n".join(texts)
+    except Exception as e:
+        print(f"docTR error: {e}")
+        return None
+
+
+def ocr_with_doctr_detailed(image_path_or_bytes) -> List[dict]:
+    """Perform OCR using docTR with detailed results.
+
+    Args:
+        image_path_or_bytes: Image file path or bytes
+
+    Returns:
+        List of dicts with word-level details
+    """
+    try:
+        from doctr.io import DocumentFile
+        from doctr.models import ocr_predictor
+    except ImportError:
+        print("python-doctr not installed. Install with: pip install python-doctr")
+        return []
+
+    try:
+        model = ocr_predictor(pretrained=True)
+
+        if isinstance(image_path_or_bytes, bytes):
+            doc = DocumentFile.from_images(image_path_or_bytes)
+        else:
+            doc = DocumentFile.from_images(str(image_path_or_bytes))
+
+        result = model(doc)
+
+        detailed = []
+        for page in result.pages:
+            for block in page.blocks:
+                for line in block.lines:
+                    for word in line.words:
+                        detailed.append({
+                            'text': word.value,
+                            'confidence': word.confidence,
+                            'bbox': word.geometry
+                        })
+
+        return detailed
+    except Exception as e:
+        print(f"docTR error: {e}")
+        return []
+
+
+# =============================================================================
+# Utility function to list available OCR engines
+# =============================================================================
+
+def get_available_ocr_engines() -> dict:
+    """Check which OCR engines are available.
+
+    Returns:
+        Dictionary with engine names and availability status
+    """
+    engines = {}
+
+    # Tesseract
+    try:
+        import pytesseract
+        pytesseract.get_tesseract_version()
+        engines['tesseract'] = True
+    except:
+        engines['tesseract'] = False
+
+    # EasyOCR
+    try:
+        import easyocr
+        engines['easyocr'] = True
+    except ImportError:
+        engines['easyocr'] = False
+
+    # PaddleOCR
+    try:
+        from paddleocr import PaddleOCR
+        engines['paddleocr'] = True
+    except ImportError:
+        engines['paddleocr'] = False
+
+    # Surya
+    try:
+        from surya.ocr import run_ocr
+        engines['surya'] = True
+    except ImportError:
+        engines['surya'] = False
+
+    # docTR
+    try:
+        from doctr.models import ocr_predictor
+        engines['doctr'] = True
+    except ImportError:
+        engines['doctr'] = False
+
+    # Google Vision (check for credentials)
+    try:
+        from google.cloud import vision
+        engines['google_vision'] = True
+    except ImportError:
+        engines['google_vision'] = False
+
+    return engines

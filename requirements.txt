@@ -5,10 +5,35 @@ httpx
 pandas
 openpyxl
 
-# Local OCR (optional - install if needed)
-# pytesseract
+# =============================================================================
+# OCR Engines (install only the ones you need)
+# =============================================================================
+
+# EasyOCR - Easy to use, good accuracy
 easyocr
 opencv-python
 
-# Cloud OCR/AI (optional - install if using cloud features)
-google-cloud-vision
+# PaddleOCR - High accuracy, 109 languages, lightweight
+# pip install paddleocr paddlepaddle
+# paddleocr
+
+# Surya - Modern OCR with layout analysis, 90+ languages
+# pip install surya-ocr
+# surya-ocr
+
+# docTR - Document-focused OCR by Mindee
+# pip install python-doctr[torch]  # or [tf] for TensorFlow
+# python-doctr
+
+# Tesseract - Traditional OCR (requires system installation)
+# pip install pytesseract
+# pytesseract
+
+# =============================================================================
+# Cloud Services (optional)
+# =============================================================================
+
+# Google Cloud Vision - High accuracy cloud OCR
+# google-cloud-vision
+
+# Gemini API - Uses httpx (already included above)
