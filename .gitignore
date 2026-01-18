@@ -38,8 +38,11 @@ ENV/
 Thumbs.db
 
 # Project specific
-data/
-output/
+# Keep data directory structure but ignore contents
+data/input/*
+data/output/*
+!data/input/.gitkeep
+!data/output/.gitkeep
 *.xlsx
 *.pptx
 

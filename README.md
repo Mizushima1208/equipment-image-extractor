@@ -2,6 +2,24 @@
 
 建設機械・産業機器・電動工具の銘板画像から情報を抽出するライブラリ。
 
+## フォルダ構成
+
+```
+equipment-image-extractor/
+├── data/
+│   ├── input/     # ここに画像を配置
+│   └── output/    # ここに結果（Excel）が出力される
+├── batch_process.py   # バッチ処理スクリプト
+├── example.py         # 単一画像処理
+└── ...
+```
+
+## クイックスタート
+
+1. `data/input/` フォルダに画像を配置
+2. `python batch_process.py` を実行
+3. `data/output/` に結果のExcelファイルが出力される
+
 ## 機能
 
 - **複数のOCRエンジン対応**
@@ -56,8 +74,11 @@ python example.py image.jpg google-vision-gemini
 ### コマンドライン（バッチ処理）
 
 ```bash
-# フォルダ内の画像を一括処理してExcel出力
-python batch_process.py ./data ./output easyocr
+# デフォルト: data/input → data/output
+python batch_process.py
+
+# カスタムディレクトリを指定
+python batch_process.py ./images ./results easyocr
 ```
 
 ### Pythonコード

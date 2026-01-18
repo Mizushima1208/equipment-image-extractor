@@ -5,28 +5,35 @@ from pathlib import Path
 from datetime import datetime
 
 # Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent))
+SCRIPT_DIR = Path(__file__).parent.absolute()
+sys.path.insert(0, str(SCRIPT_DIR))
 
 from extractor import extract_equipment_info_sync
 from excel_output import create_excel_report, format_result_for_excel
 from image_processor import load_image
 from PIL import Image
 
+# Default directories
+DEFAULT_INPUT_DIR = SCRIPT_DIR / "data" / "input"
+DEFAULT_OUTPUT_DIR = SCRIPT_DIR / "data" / "output"
+
 
 def process_directory(
-    input_dir: Path,
+    input_dir: Path = None,
     output_dir: Path = None,
     method: str = "easyocr"
 ):
     """Process all images in a directory and create Excel report.
 
     Args:
-        input_dir: Directory containing images
-        output_dir: Output directory for Excel report
+        input_dir: Directory containing images (default: data/input)
+        output_dir: Output directory for Excel report (default: data/output)
         method: Extraction method to use
     """
+    if input_dir is None:
+        input_dir = DEFAULT_INPUT_DIR
     if output_dir is None:
-        output_dir = input_dir / "output"
+        output_dir = DEFAULT_OUTPUT_DIR
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -120,25 +127,48 @@ def process_directory(
 
 def main():
     """Main entry point for batch processing."""
-    if len(sys.argv) < 2:
-        print("Usage: python batch_process.py <input_directory> [output_directory] [method]")
-        print("")
-        print("Methods:")
-        print("  easyocr (default) - Local EasyOCR + pattern matching (no cloud)")
-        print("  gemini-vision     - Gemini Vision direct analysis")
-        print("  google-vision-gemini - Google Vision OCR + Gemini")
-        print("  easyocr-gemini    - Local EasyOCR + Gemini analysis")
-        print("")
-        print("Example:")
-        print("  python batch_process.py ./data ./output easyocr")
-        return
+    # Parse arguments
+    input_dir = None
+    output_dir = None
+    method = "easyocr"
 
-    input_dir = Path(sys.argv[1])
-    output_dir = Path(sys.argv[2]) if len(sys.argv) > 2 else None
-    method = sys.argv[3] if len(sys.argv) > 3 else "easyocr"
+    if len(sys.argv) >= 2:
+        if sys.argv[1] in ("--help", "-h"):
+            print("Usage: python batch_process.py [input_directory] [output_directory] [method]")
+            print("")
+            print("Default directories:")
+            print(f"  Input:  data/input")
+            print(f"  Output: data/output")
+            print("")
+            print("Methods:")
+            print("  easyocr (default) - Local EasyOCR + pattern matching (no cloud)")
+            print("  gemini-vision     - Gemini Vision direct analysis")
+            print("  google-vision-gemini - Google Vision OCR + Gemini")
+            print("  easyocr-gemini    - Local EasyOCR + Gemini analysis")
+            print("")
+            print("Examples:")
+            print("  python batch_process.py                    # Use default directories")
+            print("  python batch_process.py ./images           # Custom input, default output")
+            print("  python batch_process.py ./images ./results easyocr")
+            return
+        input_dir = Path(sys.argv[1])
 
+    if len(sys.argv) >= 3:
+        output_dir = Path(sys.argv[2])
+
+    if len(sys.argv) >= 4:
+        method = sys.argv[3]
+
+    # Use defaults if not specified
+    if input_dir is None:
+        input_dir = DEFAULT_INPUT_DIR
+    if output_dir is None:
+        output_dir = DEFAULT_OUTPUT_DIR
+
+    # Check input directory exists
     if not input_dir.exists():
         print(f"Error: Input directory not found: {input_dir}")
+        print(f"Please create the directory and add images to process.")
         return
 
     process_directory(input_dir, output_dir, method)
