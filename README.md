@@ -1,11 +1,11 @@
-# Equipment Image Extractor
+# Image Extractor
 
-建設機械・産業機器・電動工具の銘板画像から情報を抽出するライブラリ。
+製品の銘板・ラベル画像から情報を抽出するライブラリ。
 
 ## フォルダ構成
 
 ```
-equipment-image-extractor/
+image-extractor/
 ├── data/
 │   ├── input/     # ここに画像を配置
 │   └── output/    # ここに結果（Excel）が出力される
@@ -84,10 +84,10 @@ python batch_process.py ./images ./results easyocr
 ### Pythonコード
 
 ```python
-from equipment_image_extractor import extract_equipment_info_sync
+from extractor import extract_equipment_info_sync
 
 # 画像を読み込み
-with open("nameplate.jpg", "rb") as f:
+with open("label.jpg", "rb") as f:
     image_bytes = f.read()
 
 # 情報抽出（ローカルOCR）
@@ -96,7 +96,7 @@ result = extract_equipment_info_sync(image_bytes, method="easyocr")
 # 情報抽出（Gemini Vision）
 result = extract_equipment_info_sync(image_bytes, method="gemini-vision")
 
-print(f"機械名: {result['equipment_name']}")
+print(f"製品名: {result['equipment_name']}")
 print(f"型番: {result['model_number']}")
 print(f"メーカー: {result['manufacturer']}")
 ```
@@ -105,10 +105,10 @@ print(f"メーカー: {result['manufacturer']}")
 
 ```python
 import asyncio
-from equipment_image_extractor import extract_equipment_info
+from extractor import extract_equipment_info
 
 async def main():
-    with open("nameplate.jpg", "rb") as f:
+    with open("label.jpg", "rb") as f:
         image_bytes = f.read()
 
     result = await extract_equipment_info(image_bytes, method="gemini-vision")
@@ -130,26 +130,30 @@ asyncio.run(main())
 
 | フィールド | 説明 |
 |-----------|------|
-| equipment_name | 機械名・製品名 |
+| equipment_name | 製品名・品名 |
 | model_number | 型番・MODEL |
 | manufacturer | メーカー名 |
 | serial_number | シリアル番号 |
-| management_number | 管理番号（手書き） |
+| management_number | 管理番号 |
 | weight | 重量 |
-| output_power | 出力 |
-| engine_model | エンジン型式 |
+| output_power | 出力・定格 |
+| engine_model | モーター型式 |
 | year_manufactured | 製造年 |
 | specifications | その他の仕様 |
 | raw_text | OCRテキスト |
 | method_used | 使用した抽出方法 |
 
-## 対応ブランド（自動検出）
+## ブランド検出のカスタマイズ
 
-- DEWALT, MAKITA, HIKOKI, HITACHI, BOSCH
-- MILWAUKEE, RYOBI, HILTI, FESTOOL, METABO
-- PANASONIC, MAX, KYOCERA, TAJIMA
-- MIKASA, WACKER, BOMAG, AMMANN
-- その他多数
+`tool_patterns.py` の `BRANDS` リストにブランド名を追加することで、自動検出できます：
+
+```python
+BRANDS = [
+    'YOUR_BRAND_1',
+    'YOUR_BRAND_2',
+    # ...
+]
+```
 
 ## API Key取得
 

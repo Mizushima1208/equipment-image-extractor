@@ -10,48 +10,47 @@ from typing import Optional
 # Default Gemini API Key (override with GEMINI_API_KEY env var)
 DEFAULT_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
-# Vision prompt - for reading equipment nameplates
-VISION_PROMPT = """この画像は建設機械、産業機器、または電動工具の銘板（ネームプレート）または本体の写真です。
+# Vision prompt - for reading product labels/nameplates
+VISION_PROMPT = """この画像は製品の銘板（ネームプレート）、ラベル、または本体の写真です。
 以下の情報を読み取ってください。
 
 以下のJSON形式で出力してください（他の文字は含めないでください）:
 {
-    "equipment_name": "機械名・製品名（例: プレートコンパクター、ランマー、発電機、インパクトドライバーなど）",
-    "model_number": "型番・MODEL（例: MVH-R60, MT-55L, DCS371 など）",
-    "manufacturer": "メーカー名（例: 三笠産業, MIKASA, マキタ, DEWALT など）",
+    "equipment_name": "製品名・品名",
+    "model_number": "型番・MODEL",
+    "manufacturer": "メーカー名・製造者",
     "serial_number": "シリアル番号・製造番号",
     "management_number": "管理番号（手書きの番号がある場合）",
-    "weight": "重量（kg）",
-    "output_power": "出力（kW, ps, HP, V など）",
-    "engine_model": "エンジン型式",
+    "weight": "重量",
+    "output_power": "出力・定格",
+    "engine_model": "エンジン型式・モーター型式",
     "year_manufactured": "製造年",
     "specifications": "その他の仕様（読み取れた情報）"
 }
 
 注意:
-- 銘板に書かれている情報を正確に読み取ってください
+- 銘板・ラベルに書かれている情報を正確に読み取ってください
 - 汚れや傷で読めない部分はnull
 - 型番（MODEL）は最も重要な情報です
 - メーカーは銘板のロゴや会社名から特定してください
-- 電動工具の場合、ブランドロゴ（DEWALT, MAKITA, HIKOKI等）も確認してください
 """
 
 # Text extraction prompt - for OCR text analysis
-EXTRACTION_PROMPT = """以下は建設機械・産業機器・電動工具の銘板のOCRテキストです。情報を抽出してください。
+EXTRACTION_PROMPT = """以下は製品の銘板・ラベルのOCRテキストです。情報を抽出してください。
 
 OCRテキスト:
 {text}
 
 以下のJSON形式で出力してください（他の文字は含めないでください）:
 {{
-    "equipment_name": "機械名・製品名",
+    "equipment_name": "製品名・品名",
     "model_number": "型番・MODEL",
     "manufacturer": "メーカー名",
     "serial_number": "シリアル番号",
     "management_number": "管理番号",
-    "weight": "重量（kg）",
-    "output_power": "出力",
-    "engine_model": "エンジン型式",
+    "weight": "重量",
+    "output_power": "出力・定格",
+    "engine_model": "エンジン型式・モーター型式",
     "year_manufactured": "製造年",
     "specifications": "その他の仕様"
 }}

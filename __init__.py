@@ -1,4 +1,4 @@
-"""Equipment Image Extractor - Extract equipment information from nameplate and tool images."""
+"""Image Extractor - Extract product information from label and nameplate images."""
 from .extractor import extract_equipment_info, extract_equipment_info_sync
 from .ocr import ocr_with_google_vision, ocr_with_tesseract, ocr_with_easyocr, ocr_with_easyocr_detailed
 from .llm_extractor import extract_from_image, extract_from_text, format_extracted_info

@@ -1,42 +1,22 @@
-"""Pattern matching for power tool brand and model detection."""
+"""Pattern matching for product information detection."""
 import re
 from typing import Dict, List, Set
 
-# Extended brand list
-BRANDS = [
-    # Major brands
-    'DEWALT', 'DeWALT', 'MAKITA', 'マキタ', 'HIKOKI', 'HiKOKI', 'HITACHI', '日立',
-    'BOSCH', 'MILWAUKEE', 'RYOBI', 'HILTI', 'SENCO', 'FESTOOL', 'METABO',
-    'PANASONIC', 'パナソニック', 'MAX', 'マックス', 'KYOCERA', '京セラ',
-    'TAJIMA', 'タジマ', 'SK11', 'BLACK.*DECKER', 'CRAFTSMAN', 'RIDGID',
-    'KOBALT', 'PORTER.*CABLE', 'WORX', 'OREGON', 'STIHL',
-    # Additional brands
-    'PASLODE', 'Paslode', 'ITW', 'CARAT', 'KNAUF',
-    'EINHELL', 'FEIN', 'KRESS', 'AEG', 'HITACHI KOKI',
-    'SNAP.*ON', 'STANLEY', 'IRWIN', 'PROTO', 'BAHCO',
-    # Construction equipment
-    'MIKASA', '三笠産業', 'WACKER', 'BOMAG', 'AMMANN',
-    # Product lines / technology names
-    'FLEX', 'FLEXVOLT', 'XR', 'XRFLEX', 'CORDLESS', 'BRUSHLESS',
-    'LI-ION', 'LITHIUM', 'FUEL', 'ONE+', 'POWERSTACK',
-]
+# Brand list - Add your own brands here
+# Example: BRANDS = ['SONY', 'SAMSUNG', 'APPLE', ...]
+BRANDS = []
 
-# Model number patterns
+# Model number patterns (generic patterns for various products)
 MODEL_PATTERNS = [
-    r'[A-Z]{2,4}[-]?\d{2,4}[A-Z]?\d*',  # DCS371, DCB609, F-18
-    r'\d{2}V',  # 18V, 54V
-    r'[A-Z]\d{1,2}[-]?\d{1,2}',  # F-18, C3-8
-    r'[A-Z]{2,3}\d{3,4}[-]?[A-Z]{0,2}\d*',  # More complex model numbers
-    r'[A-Z]{2}\d{2}[A-Z][a-z]?[i]?',  # IM90Xi, IM65A, etc.
-    r'[A-Z]{1,2}[-]?\d{1,3}[A-Z]?',  # F-18, C-3, etc.
-    r'[A-Z]{3,}\d+[A-Z]*',  # DCH273, DCS391, etc.
-    r'MVH[-]?[A-Z]?\d+',  # MVH-R60
-    r'MT[-]?\d+[A-Z]*',  # MT-55L
+    r'[A-Z]{2,4}[-]?\d{2,4}[A-Z]?\d*',  # ABC-1234, XY123
+    r'[A-Z]{2,3}\d{3,4}[-]?[A-Z]{0,2}\d*',  # AB1234, ABC123-X
+    r'[A-Z]{1,2}[-]?\d{1,3}[A-Z]?',  # A-123, B1
+    r'[A-Z]{3,}\d+[A-Z]*',  # MODEL123
 ]
 
-# Management number patterns (handwritten numbers)
+# ID/Management number patterns
 MANAGEMENT_PATTERNS = [
-    r'\d{7,10}',  # 7-10 digit numbers (most common for management numbers)
+    r'\d{7,10}',  # 7-10 digit numbers
     r'\d{5,6}',   # 5-6 digits
 ]
 
@@ -45,6 +25,7 @@ SERIAL_PATTERNS = [
     r'S/?N[:\s]*([A-Z0-9]+)',
     r'Serial[:\s]*([A-Z0-9]+)',
     r'製造番号[:\s]*([A-Z0-9]+)',
+    r'シリアル[:\s]*([A-Z0-9]+)',
 ]
 
 
