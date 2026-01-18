@@ -1,0 +1,14 @@
+# Core dependencies
+pillow
+numpy
+httpx
+pandas
+openpyxl
+
+# Local OCR (optional - install if needed)
+# pytesseract
+easyocr
+opencv-python
+
+# Cloud OCR/AI (optional - install if using cloud features)
+google-cloud-vision
